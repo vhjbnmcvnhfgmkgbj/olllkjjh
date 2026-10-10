@@ -1,0 +1,297 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#04060a">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>GHOST // SHELL</title>
+<style>
+:root{--bg:#04060a;--panel:#0a0f16;--cyan:#00f0ff;--green:#00ff9c;--dim:#0e6b73;--amber:#ffb000;--red:#ff3b5c;--text:#c9f6ff}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;margin:0}
+body{background:radial-gradient(1200px 500px at 50% -10%,#06222b 0,var(--bg) 60%) fixed,var(--bg);color:var(--text);
+  font-family:ui-monospace,"Vazirmatn",Consolas,"Noto Sans Arabic",Tahoma,monospace;
+  display:flex;flex-direction:column;height:100dvh;overflow:hidden;position:relative;
+  padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom)}
+body::before{content:"";position:fixed;inset:0;pointer-events:none;opacity:.06;z-index:1;
+  background:repeating-linear-gradient(0deg,#fff 0 1px,transparent 1px 3px)}
+body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:1;opacity:.5;
+  background:linear-gradient(180deg,transparent 0,#00f0ff0d 50%,transparent 100%);background-size:100% 6px;
+  animation:scan 6s linear infinite}
+@keyframes scan{0%{background-position:0 -100vh}100%{background-position:0 100vh}}
+#matrix{position:fixed;inset:0;z-index:0;opacity:.22;pointer-events:none}
+#flash{position:fixed;inset:0;z-index:40;background:var(--red);opacity:0;pointer-events:none}
+#flash.on{animation:flash .25s ease}
+@keyframes flash{0%{opacity:0}30%{opacity:.35}100%{opacity:0}}
+
+header,#hud,#term,#bar,dialog{position:relative;z-index:2}
+header{display:flex;align-items:center;gap:10px;padding:10px 14px;border-bottom:1px solid var(--dim)}
+h1{margin:0;font-size:18px;letter-spacing:4px;color:var(--cyan);text-shadow:0 0 12px #00f0ff88;animation:glitch 4.5s infinite}
+@keyframes glitch{0%,92%,100%{text-shadow:0 0 12px #00f0ff88}93%{text-shadow:2px 0 var(--red),-2px 0 var(--green)}
+  94%{text-shadow:-2px 0 var(--red),2px 0 var(--green)}95%{text-shadow:0 0 12px #00f0ff88}}
+.sp{flex:1}
+#dot{width:9px;height:9px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green);animation:b .6s infinite alternate}
+@keyframes b{to{opacity:.2}}
+#clock{font:12px ui-monospace,Consolas,monospace;color:var(--dim)}
+
+#hud{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:1px;background:var(--dim);
+  border-bottom:1px solid var(--dim)}
+.cell{background:var(--panel);padding:7px 10px;font-size:11px;color:var(--dim)}
+.cell b{display:block;font-size:14px;color:var(--cyan);letter-spacing:1px;margin-top:2px}
+.cell.ok b{color:var(--green)}
+.cell.warn b{color:var(--amber)}
+
+#term{flex:1;overflow-y:auto;padding:10px 14px;font-size:13.5px;line-height:1.55;white-space:pre-wrap;word-break:break-all}
+#term div{opacity:.92}
+#term .hl{color:var(--green)}
+#term .cy{color:var(--cyan)}
+#term .wa{color:var(--amber)}
+#term .rd{color:var(--red)}
+#cursor-ln::after{content:"█";animation:b .6s infinite alternate;color:var(--green)}
+
+#bar{display:flex;flex-wrap:wrap;gap:8px;padding:10px 12px;border-top:1px solid var(--dim);background:#05080ddd}
+button{font:inherit;cursor:pointer}
+.ib{background:var(--panel);color:var(--cyan);border:1px solid var(--dim);border-radius:8px;padding:9px 13px;
+  font-size:12.5px;font-weight:700;letter-spacing:.5px}
+.ib::before{content:"[ "}.ib::after{content:" ]"}
+.ib:active{background:var(--dim)}
+.ib.danger{color:var(--red)}
+.ib.go{color:var(--green)}
+
+#typezone{position:fixed;inset:0;opacity:0;z-index:-1}
+
+dialog{background:var(--panel);color:var(--text);border:1px solid var(--red);border-radius:14px;
+  width:min(92vw,380px);padding:20px;text-align:center}
+dialog::backdrop{background:#000c}
+dialog h2{color:var(--red);letter-spacing:3px;margin:0 0 6px;animation:glitch 1.5s infinite}
+dialog p{font-size:13px;color:var(--dim);line-height:1.7}
+dialog .big{font-size:34px;color:var(--green);margin:10px 0;letter-spacing:2px}
+
+#credit{position:fixed;bottom:3px;inset-inline-end:10px;z-index:3;font:9px ui-monospace,Consolas,monospace;
+  color:var(--dim);letter-spacing:1px;opacity:.65;pointer-events:none}
+
+#boot{position:fixed;inset:0;z-index:99;background:var(--bg);color:var(--green);padding:18px;
+  font:13px/1.6 ui-monospace,Consolas,monospace;white-space:pre-wrap;overflow:hidden;display:flex;align-items:flex-end}
+#boot.hide{opacity:0;visibility:hidden;transition:opacity .4s ease}
+#bootText::after{content:"█";animation:b .6s infinite alternate;margin-inline-start:2px}
+</style>
+</head>
+<body>
+<canvas id="matrix"></canvas>
+<div id="flash"></div>
+<div id="boot"><pre id="bootText"></pre></div>
+<div id="credit">BUILT BY AMIR MOHAMMAD</div>
+
+<header>
+  <div id="dot"></div><h1>GHOST // SHELL</h1><span id="clock"></span><div class="sp"></div>
+</header>
+
+<div id="hud">
+  <div class="cell ok"><span>LINK</span><b id="hLink">SECURE</b></div>
+  <div class="cell"><span>NODE</span><b id="hIp">0.0.0.0</b></div>
+  <div class="cell ok"><span>ENCRYPTION</span><b id="hEnc">256-AES</b></div>
+  <div class="cell"><span>PING</span><b id="hPing">-- ms</b></div>
+  <div class="cell"><span>CPU</span><b id="hCpu">--%</b></div>
+  <div class="cell"><span>TRACE RISK</span><b id="hTrace">LOW</b></div>
+</div>
+
+<div id="term" dir="ltr"></div>
+
+<div id="bar">
+  <button class="ib go" id="btnHack" type="button">INITIATE BREACH</button>
+  <button class="ib" id="btnWifi" type="button">WIFI SCAN</button>
+  <button class="ib" id="btnScan" type="button">SCAN NETWORK</button>
+  <button class="ib" id="btnDecrypt" type="button">DECRYPT FILE</button>
+  <button class="ib danger" id="btnWipe" type="button">WIPE LOGS</button>
+  <button class="ib" id="btnFull" type="button">FULLSCREEN</button>
+  <button class="ib" id="btnClear" type="button">CLEAR</button>
+</div>
+<input id="typezone" autocomplete="off" autocapitalize="off" spellcheck="false">
+
+<dialog id="dlg">
+  <h2>ACCESS GRANTED</h2>
+  <div class="big" id="dlgTarget">NODE-0000</div>
+  <p id="dlgBody">سیستم هدف با موفقیت نفوذ شد. تمام لاگ‌ها پاک‌سازی شدند.</p>
+  <button class="ib" id="dlgClose" type="button" style="margin-top:10px">بستن</button>
+</dialog>
+
+<script>
+"use strict";
+const $ = s => document.querySelector(s);
+
+/* ---------------- matrix rain background ---------------- */
+(function () {
+  const c = $("#matrix"), ctx = c.getContext("2d");
+  let w, h, cols, drops;
+  const CH = "アカサタナハマヤラワ01$#%&{}<>/*";
+  function resize() { w = c.width = innerWidth; h = c.height = innerHeight; cols = Math.floor(w / 15); drops = Array(cols).fill(0); }
+  resize(); addEventListener("resize", resize);
+  function frame() {
+    if (!document.hidden) {
+      ctx.fillStyle = "rgba(4,6,10,0.07)"; ctx.fillRect(0, 0, w, h);
+      ctx.fillStyle = "#00ff9c"; ctx.font = "14px ui-monospace,Consolas,monospace";
+      for (let i = 0; i < cols; i++) {
+        ctx.fillText(CH[(Math.random() * CH.length) | 0], i * 15, drops[i] * 15);
+        if (drops[i] * 15 > h && Math.random() > 0.97) drops[i] = 0;
+        drops[i]++;
+      }
+    }
+    requestAnimationFrame(frame);
+  }
+  if (!matchMedia("(prefers-reduced-motion: reduce)").matches) requestAnimationFrame(frame);
+})();
+
+/* ---------------- boot sequence ---------------- */
+(async function boot() {
+  const el = $("#bootText"), box = $("#boot");
+  const lines = [
+    "> LOADING GHOST SHELL KERNEL...",
+    "> SPOOFING MAC ADDRESS.............. OK",
+    "> ROUTING THROUGH 7 PROXIES......... OK",
+    "> DISABLING TELEMETRY............... OK",
+    "> DECRYPTING LOCAL CACHE............ OK",
+    "> BUILT BY: AMIR MOHAMMAD",
+    "> WELCOME, OPERATOR."
+  ];
+  const sleep = ms => new Promise(r => setTimeout(r, ms));
+  for (const line of lines) {
+    for (const ch of line) { el.textContent += ch; await sleep(5); }
+    el.textContent += "\n"; await sleep(90);
+  }
+  await sleep(350);
+  box.classList.add("hide");
+  setTimeout(() => box.remove(), 450);
+})();
+
+/* ---------------- clock ---------------- */
+setInterval(() => { $("#clock").textContent = new Date().toLocaleTimeString("en-GB"); }, 1000);
+
+/* ---------------- hud fake telemetry ---------------- */
+const rnd = (a, b) => (Math.random() * (b - a) + a) | 0;
+const fakeIp = () => [rnd(1, 255), rnd(0, 255), rnd(0, 255), rnd(1, 255)].join(".");
+function tickHud() {
+  $("#hIp").textContent = fakeIp();
+  $("#hPing").textContent = rnd(8, 240) + " ms";
+  $("#hCpu").textContent = rnd(12, 97) + "%";
+  const trace = ["LOW", "LOW", "LOW", "MEDIUM", "HIGH"][rnd(0, 5)];
+  const te = $("#hTrace"); te.textContent = trace;
+  te.parentElement.className = "cell " + (trace === "LOW" ? "ok" : trace === "MEDIUM" ? "warn" : "");
+}
+tickHud(); setInterval(tickHud, 2200);
+
+/* ---------------- terminal ---------------- */
+const term = $("#term");
+function println(html) {
+  const d = document.createElement("div");
+  d.innerHTML = html;
+  term.appendChild(d);
+  term.scrollTop = term.scrollHeight;
+  while (term.childElementCount > 400) term.removeChild(term.firstChild);
+}
+function ts() { return new Date().toLocaleTimeString("en-GB"); }
+
+const VERBS = ["Injecting", "Bypassing", "Spoofing", "Decrypting", "Hooking", "Patching", "Flooding", "Enumerating", "Hijacking", "Proxying", "Rerouting", "Cracking", "Mapping", "Exploiting", "Compiling", "Obfuscating"];
+const NOUNS = ["firewall", "kernel.sys", "auth_token", "session.db", "root_cert", "proxy_chain", "packet_queue", "handshake", "memory_block", "socket_pool", "payload.bin", "gateway_node", "shadow_table", "cipher_key", "boot_sector", "node_cluster"];
+const HEX = () => "0x" + Array.from({length: 8}, () => rnd(0, 16).toString(16)).join("");
+function randLine() {
+  const v = VERBS[rnd(0, VERBS.length)], n = NOUNS[rnd(0, NOUNS.length)];
+  const kind = rnd(0, 5);
+  if (kind === 0) return `<span class="cy">[${ts()}]</span> ${v} ${n} @ ${HEX()} ... <span class="hl">OK</span>`;
+  if (kind === 1) return `<span class="cy">[${ts()}]</span> packet ${fakeIp()}:${rnd(1024, 65535)} -> ${fakeIp()}:${rnd(1, 1024)} <span class="wa">SYN</span>`;
+  if (kind === 2) return `<span class="cy">[${ts()}]</span> buffer[${rnd(0, 9999)}] = ${HEX()} <span class="hl">written</span>`;
+  if (kind === 3) return `<span class="cy">[${ts()}]</span> ${v} ${n} ... ${rnd(0, 100)}%`;
+  return `<span class="cy">[${ts()}]</span> thread#${rnd(0, 64)} :: ${n} <span class="hl">locked</span>`;
+}
+
+/* typing anywhere floods fake code, like hackertyper */
+const typezone = $("#typezone");
+function focusType() { typezone.focus({preventScroll: true}); }
+document.addEventListener("click", focusType);
+focusType();
+typezone.addEventListener("keydown", e => {
+  const n = e.key === "Enter" ? 3 : rnd(1, 3);
+  for (let i = 0; i < n; i++) println(randLine());
+  typezone.value = "";
+});
+typezone.addEventListener("input", () => { typezone.value = ""; });
+
+/* ---------------- scripted sequences ---------------- */
+let busy = false;
+function flash() { const f = $("#flash"); f.classList.remove("on"); void f.offsetWidth; f.classList.add("on"); }
+function bar(pct, label) {
+  const total = 24, filled = Math.round(total * pct / 100);
+  return `<span class="hl">[${"#".repeat(filled)}${"-".repeat(total - filled)}]</span> ${pct}% ${label || ""}`;
+}
+async function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+async function runProgress(label) {
+  for (let p = 0; p <= 100; p += rnd(7, 18)) {
+    println(bar(Math.min(p, 100), label));
+    if (Math.random() > 0.6) println(randLine());
+    await sleep(110);
+  }
+}
+
+async function sequence(title, steps, successTitle, successBody) {
+  if (busy) return; busy = true;
+  println(`<span class="wa">== ${title} ==</span>`);
+  for (const step of steps) {
+    println(`<span class="cy">[${ts()}]</span> ${step}`);
+    await runProgress(step);
+  }
+  flash();
+  println(`<span class="hl">== COMPLETE ==</span>`);
+  $("#dlgTarget").textContent = "NODE-" + rnd(1000, 9999);
+  $("#dlgBody").textContent = successBody;
+  $("#dlg").querySelector("h2").textContent = successTitle;
+  $("#dlg").showModal();
+  busy = false;
+}
+
+$("#btnHack").addEventListener("click", () => sequence(
+  "INITIATE BREACH",
+  ["Scanning target perimeter", "Bypassing firewall", "Brute-forcing handshake", "Escalating privileges", "Planting backdoor"],
+  "ACCESS GRANTED", "سیستم هدف با موفقیت نفوذ شد. تمام لاگ‌ها پاک‌سازی شدند."
+));
+$("#btnWifi").addEventListener("click", () => sequence(
+  "WIFI SCAN",
+  ["Listening for beacon frames", "Enumerating nearby SSIDs", "Measuring signal strength"],
+  "SCAN COMPLETE", rnd(2, 11) + " شبکه‌ی اطراف پیدا شد (نمایشی — به هیچ شبکه‌ای واقعاً متصل نمی‌شود)."
+));
+$("#btnScan").addEventListener("click", () => sequence(
+  "NETWORK SCAN",
+  ["Pinging subnet", "Resolving open ports", "Fingerprinting services"],
+  "SCAN COMPLETE", rnd(3, 19) + " دستگاه فعال در شبکه پیدا شد."
+));
+$("#btnDecrypt").addEventListener("click", () => sequence(
+  "DECRYPTING FILE",
+  ["Loading cipher table", "Running key permutations", "Reconstructing checksum"],
+  "FILE DECRYPTED", "فایل با موفقیت رمزگشایی شد."
+));
+$("#btnWipe").addEventListener("click", () => sequence(
+  "LOG WIPE",
+  ["Locating session logs", "Overwriting sectors", "Shredding residue"],
+  "LOGS WIPED", "تمام ردپاهای دیجیتال پاک شدند."
+));
+$("#btnClear").addEventListener("click", () => { term.innerHTML = ""; });
+$("#btnFull").addEventListener("click", () => {
+  if (!document.fullscreenElement) document.documentElement.requestFullscreen().catch(() => {});
+  else document.exitFullscreen().catch(() => {});
+});
+$("#dlgClose").addEventListener("click", () => $("#dlg").close());
+
+/* intro log burst */
+(async function intro() {
+  await sleep(600);
+  println(`<span class="hl">GHOST // SHELL v2.7 — operator session started.</span>`);
+  println(`type anywhere to flood the console, or use the buttons below.`);
+  for (let i = 0; i < 3; i++) { println(randLine()); await sleep(250); }
+})();
+
+if ("serviceWorker" in navigator && location.protocol.startsWith("http")) navigator.serviceWorker.register("sw.js").catch(() => {});
+</script>
+</body>
+</html>
